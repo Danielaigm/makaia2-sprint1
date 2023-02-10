@@ -1,0 +1,79 @@
+
+.formSignInContainer {
+    width: 100vw;
+    height: 100vh;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url("https://t2.uc.ltmcdn.com/es/posts/7/0/8/como_cambiar_el_fondo_de_whatsapp_en_iphone_5807_600.jpg");
+
+    div {
+        width: 500px;
+        height: 500px;
+        background-color: white;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        justify-content: space-between;
+    }
+
+    h1 {
+        font-weight: 700;
+        font-size: 50px;
+        letter-spacing: 1px;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        margin: 30px 0px 30px 0px;
+    }
+
+    input {
+        width: 420px;
+        height: 35px;
+        border: none;
+        border-bottom: 1px solid #d9dbd5;
+        font-size: 16px;
+        outline: none;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input:focus {
+        border-bottom: 1px solid #50f99f;
+    }
+
+    button {
+        width: 420px;
+        height: 35px;
+        border-radius: 30px;
+        color: white;
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: 1px;
+        background-color:#50f99f;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #2ddd7f;
+    }
+
+    span {
+        font-weight: 700;
+        cursor: pointer;
+    }
+    span:hover {
+        color: #34b7f1;
+    }
+}

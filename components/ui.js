@@ -1,0 +1,656 @@
+//IMPORTS
+// -----------------------
+import { postNewUser,
+        changePropertyUSer, 
+        changePropertyMessages, 
+        getApiUsers, 
+        getApiMessages, 
+        postNewMessages} 
+from "./services.js";
+import { justDate, 
+        hour, 
+        compareDate} 
+from "./date.js";
+
+// ------------------
+const formSignInContainer = document.getElementById('formSignInContainer');
+const formSignIn = document.getElementById("formSignIn");
+const logInNumber = document.getElementById("logInNumber");
+const logInPassword = document.getElementById("logInPassword");
+const signUpFree = document.getElementById("signUpFree");
+
+
+// ----------------------------------------
+const formSignUp = document.getElementById("formSignUp");
+const signUpNumber = document.getElementById("signUpNumber");
+const signUpName = document.getElementById("signUpName");
+const signUpPassword = document.getElementById("signUpPassword");
+const signUpImg = document.getElementById("signUpImg");
+const signUpPhrase = document.getElementById("signUpPhrase");
+const formSignUpContainer = document.getElementById('formSignUpContainer');
+
+// -------------------------------------------------------
+const homePage = document.getElementById('homePage');
+const imgProfileMini = document.getElementById('imgProfileMini');
+const leftSide = document.getElementById('leftSide');
+const leftSide_Chats = document.getElementById('leftSide_Chats');
+const leftSide_EditProfile = document.getElementById('leftSide_EditProfile');
+const arrorLeft = document.getElementById('arrorLeft');
+const searchInConversation = document.getElementById('searchInConversation');
+const fixedBarSearch = document.getElementById('fixedBarSearch');
+const XfixedBarSearch = document.getElementById('XfixedBarSearch');
+const imgProfileUser = document.getElementById('imgProfileUser');
+const imgProfileUserBig = document.getElementById('imgProfileUserBig');
+const nameUser = document.getElementById('nameUser');
+const editUserName = document.getElementById('editUserName');
+const chatsBar = document.getElementById('chatsBar');
+export const inputImgProfile = document.getElementById('inputImgProfile');
+export const formImgProfile = document.getElementById('formImgProfile');
+
+const inputFilterMiniChats = document.getElementById('inputFilterMiniChats');
+
+
+const rightSide = document.getElementById('rightSide');
+const nameBigChat = document.getElementById('nameBigChat');
+const otherUserImgProfile = document.getElementById('otherUserImgProfile');
+const statusOtherUser = document.getElementById('statusOtherUser');
+const mainChat = document.getElementById('mainChat');
+const formSendMsg = document.getElementById('formSendMsg');
+const inputFormSendNsg = document.getElementById('inputFormSendNsg');
+const micAndSend = document.getElementById('micAndSend');
+const arrowHeaderMain = document.getElementById('arrowHeaderMain');
+
+
+const inputFilterBigChat = document.getElementById('inputFilterBigChat');
+const searchResultContainer = document.getElementById('searchResultContainer');
+const name = document.getElementById('name');
+
+const formInputFilterMiniChats = document.getElementById("formInputFilterMiniChats")
+
+
+export let idUserOnline = 0;
+export let idOther = 0;
+export let idMs = 0;
+let messageUserAll = [];
+let loque = 0;
+let pMsgBefore = '';
+let lastDateCompared;
+let newChat, idNewUser ;
+
+
+
+
+
+const sweetAlert = (text,icon='') => {
+    return Swal.fire({
+        title: `${text}`,
+        confirmButtonColor: "#34b7f1",
+        icon,
+    });
+};
+
+const sweetAlertWelcome = (userName) => {
+    return Swal.fire({
+        position: "center",
+        icon: "success",
+        title: userName,
+        showConfirmButton: false,
+        timer: 1500,
+    });
+};
+
+
+
+export const actionsFormSigIn = (usersData, messagesData) => {
+    formSignIn.addEventListener("submit", (e) => {
+        e.preventDefault();
+        signInValidation(usersData, messagesData);
+    });
+}
+
+const validateInputLogin = () => {
+    if(!logInNumber.value && !logInPassword.value) {
+        sweetAlert("Debes llenar todos los campos");
+        return false
+    }
+    if (!logInNumber.value) {
+        sweetAlert("Debes llenar todos los campos");
+        return  false
+    }
+    if (!logInPassword.value) {
+        sweetAlert("Debes llenar todos los campos");
+        return false
+    }
+    return true
+}
+
+
+const signInValidation = (usersData, messagesData) => {
+    const isValidate = validateInputLogin();
+    if(!isValidate) return
+    let x = false;
+    if (logInNumber.value && logInPassword.value) {
+        const logInNumberPars = parseInt(logInNumber.value);
+        usersData.forEach( async (user) => {
+            if (logInNumberPars === user.cellphone) {
+                x = true;
+                if(logInPassword.value == user.password){
+                    sweetAlertWelcome(`Bienvenid@ ${user.name}`);
+                    idUserOnline = user.id;
+                    homePage.classList.remove('hidden');
+                    formSignInContainer.classList.add('hidden');
+                    await changePropertyUSer(idUserOnline, { flag: false });
+                    renderHomePage(usersData, messagesData);
+                    getMessageUserAll(usersData, messagesData);
+                    loque = messageUserAll[0].idMessages;
+                    actCheckView();
+                    renderBigChat();
+                    return
+                }
+                return sweetAlert("Contraseña incorrecta");
+            }
+        });
+        if (!x) {
+            sweetAlert("El número ingresado no existe");
+        }
+    }
+};
+
+
+// -----------------------------------------------
+export const redirectionToSignUp = () => {
+    signUpFree.addEventListener("click", () => {
+    formSignInContainer.classList.add('hidden');
+    formSignUpContainer.classList.remove('hidden');
+});
+}
+
+// --------------------------------------------------------------
+export const signUpEvent = (usersData) => {
+    formSignUp.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const signUpNumberPars = parseInt(signUpNumber.value);
+        let y = true;
+        const isNotValidate = usersData.some((user) => signUpNumberPars === user.cellphone);
+        if(isNotValidate) return sweetAlert("El número de celular ingresado ya esta registrado");
+        if (
+            signUpName.value &&
+            signUpNumber.value &&
+            signUpPassword.value &&
+            signUpImg.value &&
+            signUpPhrase.value
+        ) {
+            try{
+                const newUser = {
+                name: signUpName.value,
+                cellphone: parseInt(signUpNumber.value),
+                password: signUpPassword.value,
+                url_profile_image: signUpImg.value,
+                flag: false,
+                phrase: signUpPhrase.value,
+                last_on_line: "",
+                };
+                await postNewUser(newUser);
+                sweetAlertWelcome("Nuevo usuario creado", 'success').then(()=>{
+                    window.location.reload()
+                });
+            } catch(e){
+                sweetAlert('Ha ocurrido un error, por favor intetelo mas tarde', 'error')
+            }
+        } else {
+            sweetAlert("Debes llenar todos los campos");
+        }
+    });
+};
+
+
+imgProfileMini.addEventListener('click', () => {
+    leftSide_Chats.classList.add('hidden');
+    leftSide_EditProfile.classList.remove('hidden');
+});
+
+arrorLeft.addEventListener('click', () => {
+    leftSide_Chats.classList.remove('hidden');
+    leftSide_EditProfile.classList.add('hidden');
+});
+
+searchInConversation.addEventListener('click', () => {
+    fixedBarSearch.classList.remove('hidden');
+    searchResultContainer.innerHTML = '';
+});
+
+XfixedBarSearch.addEventListener('click', () => {
+    fixedBarSearch.classList.add('hidden');
+    inputFilterBigChat.value = '';
+});
+
+
+
+const renderBigChat = async () => {
+    mainChat.innerHTML = '';
+    messageUserAll.forEach(part => {
+        if (part.idMessages == loque) {
+            nameBigChat.innerText = part.name;
+            name.innerText = part.name;
+            otherUserImgProfile.src = part.url_profile_image;
+            part.flagUser ? statusOtherUser.innerText = part.last_on_line : statusOtherUser.innerText = 'EN LINEA';
+            part.message.forEach(msg => {
+                const source = msg.flag ? 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACeElEQVR4nO2YPYgTQRTH4zeCiGhhYWGhgqS57LzcB1goKIhooaKIYGFlI3Za6lWWKscJufdWERuRq7TTwkLB6ioLUdDCi3hwEO69jaKi0ZUJHLizaz545yTF/GC6X5L3n8y+2ZlSKRAIBAKBwHBhKDkGKJ8MSr2KyZGVcr0CsYwZ5G9AktphC1wJ1ysjtcYOIF5YLqw9UD5oXa9M3KhvBOK5bGH8O4rljMb1S5quMsgPMoVRu7jrKtc3BuWaW5hBeVSaTFdrXK8Y4hNA/CtbHL8em2ps1rheGSWuAMqXzOwSNwBll8b1ynj8eTuQzDuz+wNiPqBxvVKeTdcDyfPcWo/lgsb1DpDEucJIbmpdrxjiK7nWSfx0/2S6VuN6xZAcNsitbOvktyP3eIvG9Qpgcy+QiDPDS5VaskfjemUilq2A/M5pnT+jGT6ocb0CmK4DlGcFD+xFjesdg1wrKOyu1vUKkFzKv9zJC7s3aNyO2NOVQfloByAfLympohyya9tpne9Hp5NtGrcr7QB/P1yKd3vbXWyXcZZIUqk1yxq37yCaMLbPA/Ebp/+3AJOjGrdn7HJy/95+w5yeTdcA8pP8eYEva9y+AeJTuTDIrShOzvX0eZRbBYee+1rXaxhDfD7fOvnl7ql0g8b1Ggbi5j4g/u4UN2/PERrXa5joztJOIF50us7XaEaq7nf243oNU769uAlQXvVyLdOP+1+wP1TUzYDkrCF5XLAbX3U32Cjmk51cb0QFYQoH8kN771S0L3VyhywMz9kbwGW/c5CsO0RheMHexXbbYP/lDgRwGkD7NhyTca07EMDONkrdjm7vRf24gUAgEAiUBswfUs8NsL93IuYAAAAASUVORK5CYII=' : 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACSElEQVR4nO2YPYhTQRSF4z+CiGhhYWEhglhZiBY2goKIFqsIIlhY2YidlprKVkklIcjccyYJMpV2WkhQsNrKQhS0cHdxQRBREBWNRgYXCeNsfrjrTYr5YLrvvZw7mXfnvalUCoVCoVAoTBcATgJ4S3JeRI6vlGuKiBwg+ZVkb2nMr4RriojsALDYF6wH4I3WNSWEsJHkbBLsF4CzGteUXq+3CkC7Pxj/hLuhcc0BcD0NRvJetVpdrXFNEZFTJH8ms/vce79Z45rinNsH4HMyu+9FZJfGNaXdbm8nOZcE++69P6xxTQkhrCf5OLPWL2pccwA0Ml3nptY1BcDVzOw+7HQ6azWuKQCOAegms/vSObdF45rinNsD4GMS7EOr1dqtcU1pNBpbAbxKgv3w3h/RuKbU6/V1AB5l1voljWsOyduZYHe0rikALmda55O4N2jcgcSvKwALcZCcqSgBcDSu7STcawDbNO5Qlgr4+3Bp3u1jd4ldJpndT977vRp37EI0xcQ+T/JFcq+u9/6Exh2ZuJzSv3fcYkIIa0g+yDywVzTu2IjImUwxXRE5P8r1JG9lHlhoXdNiSF7IBHtaq9U2aFzTYpxzh0h+S8LNxe8IjWtaTLPZ3AngXeJ9AbA/vec4rmkxIYRNJJ+NeIQzsvtfiD+U62be+3MA7mfW+rV0gwVwepBrBjLFLDPuxnOn3L40yJ22YmbjCWCfvzCqOzXFAFiMZ7HDNtjl3Ikg/zaAeBp+UOtOBJIz8Qg/jmHvReO4hUKhUChUJsxvDuxjrUm0xUgAAAAASUVORK5CYII=';
+                if (msg.date != lastDateCompared) {
+                    mainChat.innerHTML += `<span class="día">${compareDate(msg.date)}</span>`;
+                    lastDateCompared = msg.date;
+                }
+
+                if (msg.sendBy != idUserOnline) {
+                    mainChat.innerHTML += `
+                    <div class="messageReceived">
+                        <div>
+                            <p class="fakeInput">${msg.message}</p>
+                            <p class="space">n</p>
+                        </div>
+                        <span>${msg.hour}</span>
+                    </div> `;
+                } else {
+                    mainChat.innerHTML += `
+                    <div class="messageSendedContainer">
+                        <ul class="desplegMenu hidden" id="desplegMenu">
+                            <li id="edit" >Editar</li>
+                            <li id="delete" >Eliminar</li>
+                        </ul>
+                        <div class="messageSended">
+                            <div class="mm">
+                                <p class="fakeInput" id="pMsg">${msg.message}</p>
+                                <figure class="arrow"><img src="./assets/img/icon-arrow-down.svg" alt="" class="arrow2"></figure>
+                            </div>
+                            <div class="divHyC">
+                                <span id="hourSend">${msg.hour}</span>
+                                <i class="checkIconBlue" ><img src="${source}" alt="checkIcon" class="imgIconCheck" ></i>
+                            </div>
+                        </div>
+                    </div>`;
+                };
+            });
+        };
+    });
+    if (newChat) {
+        const usersData2 = await getApiUsers();
+        usersData2.forEach(user => {
+            if (user.id == idNewUser) {
+                mainChat.innerHTML = '';
+                nameBigChat.innerText = user.name;
+                name.innerText = user.name;
+                otherUserImgProfile.src = user.url_profile_image;
+                user.flag ? statusOtherUser.innerText = user.last_on_line : statusOtherUser.innerText = 'EN LINEA';
+            }
+        })
+    }
+    mainChat.scrollTop = mainChat.scrollHeight;
+};
+
+const patchMessages = async (actMessageObject) => {
+    await changePropertyMessages(loque, actMessageObject);
+}
+
+mainChat.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('arrow2')) {
+        const parentElement = e.target.closest('.messageSendedContainer');
+        const desplegMenu = parentElement.querySelector('#desplegMenu');
+        desplegMenu.classList.toggle('hidden');
+        const editMsg = parentElement.querySelector('#edit');
+        const deletetMsg = parentElement.querySelector('#delete');
+        const pMsg = parentElement.querySelector('#pMsg');
+        const hourSend = parentElement.querySelector('#hourSend');
+
+        editMsg.addEventListener('click', () => {
+            desplegMenu.classList.add('hidden');
+            pMsg.toggleAttribute('ContentEditable');
+            pMsg.style.cssText = `padding: 0px 5px;`;
+            pMsg.focus();
+            pMsgBefore = pMsg.textContent;
+
+        });
+        pMsg.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                messageUserAll.forEach( ms => {
+                    if (ms.idMessages == loque) {
+                        const objetoAEditar = ms.message.find(obj => obj.message === pMsgBefore && obj.hour === hourSend.textContent);
+                        objetoAEditar.message = pMsg.textContent.trim();
+                        ms.message.splice(ms.message.indexOf(objetoAEditar), 1, objetoAEditar);
+                        patchMessages({ conversations: ms.message });
+                    };
+                });
+                pMsg.innerText = pMsg.textContent.trim();
+                pMsg.removeAttribute('ContentEditable');
+            };
+        });
+        deletetMsg.addEventListener('click', () => {
+            desplegMenu.classList.add('hidden');
+            const sweetAlertDelete = () => {
+                Swal.fire({
+                    title: '¿Está seguro de eliminar el mensaje',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Si, eliminar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire(
+                        'Eliminado',
+                        'Tu mensaje ha sido eliminado.',
+                        'success'
+                        )
+                        messageUserAll.forEach( async ms => {
+                            if (ms.idMessages == loque) {
+                                ms.message.splice(ms.message.findIndex(obj => obj.message === pMsgBefore && obj.hour === hourSend.textContent), 1);
+                                patchMessages({ conversations: ms.message });
+                                const usersData2 = await getApiUsers();
+                                const messagesData2 = await getApiMessages();
+                                getMessageUserAll(usersData2, messagesData2);
+                                renderBigChat();
+                            };
+                        });
+                    } else {
+                        console.log('conservar')
+                    }
+                })
+            }
+            sweetAlertDelete();
+        });
+    };
+});
+
+formSendMsg.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (inputFormSendNsg.value) {
+        if (!newChat) {
+            const messagesData = await getApiMessages();
+            const nweMsg = {
+                sendBy: idUserOnline,
+                date: justDate(),
+                hour: hour(),
+                message: inputFormSendNsg.value,
+                flag: false
+            };
+            messagesData.forEach(element => {
+                if (element.id == loque) {
+                    element.conversations.push(nweMsg)
+                    const actMessageObject = element;
+                    patchMessages(actMessageObject);
+                }
+            });
+            formSendMsg.reset();
+            const usersData2 = await getApiUsers();
+            const messagesData2 = await getApiMessages();
+            getMessageUserAll(usersData2, messagesData2);
+            micAndSend.src = '../assets/img/mic.svg';
+            renderBigChat();
+        }
+        if (newChat) {
+            const newChatPost = {
+                idUser1: idUserOnline,
+                idUser2: parseInt(idNewUser),
+                conversations: [
+                    {
+                    sendBy: idUserOnline,
+                    date: justDate(),
+                    hour: hour(),
+                    message: inputFormSendNsg.value,
+                    flag: false
+                    }
+                ]
+            }
+            const newConversation = await postNewMessages(newChatPost);
+            loque = newConversation.id;
+            formSendMsg.reset();
+            formInputFilterMiniChats.reset();
+            // newChat = false;
+            const usersData2 = await getApiUsers();
+            const messagesData2 = await getApiMessages();
+            getMessageUserAll(usersData2, messagesData2);
+            micAndSend.src = '../assets/img/mic.svg';
+            newChat = false;
+            renderBigChat();
+        }
+    }
+});
+
+formSendMsg.addEventListener('keyup', () => {
+    if (inputFormSendNsg.value) {
+        micAndSend.src = '../assets/img/send.svg';
+    } else {
+        micAndSend.src = '../assets/img/mic.svg';
+    }
+})
+
+
+export const renderHomePage = (usersData) => {
+    usersData.forEach((user) => {
+        if (user.id == idUserOnline) {
+            imgProfileUser.src = user.url_profile_image;
+            imgProfileUserBig.style.cssText = `background-image: url(${user.url_profile_image});`;
+            nameUser.innerText = user.name;
+        }
+    });
+};
+
+const renderMiniChats = async (filterChatsValue = '') => {
+    chatsBar.innerHTML = '';
+    const usersData2 = await getApiUsers();
+    const filter = messageUserAll.filter(obj => {
+        const name = obj.name.toLowerCase();
+        const message = obj.message.some(m => m.message.toLowerCase().includes(filterChatsValue.toLowerCase()));
+        return name.includes(filterChatsValue.toLowerCase()) || message;
+    })
+    const usersDataFilter = usersData2.filter(u => u.name.toLowerCase().includes(filterChatsValue.toLowerCase()));
+    const result = filter.concat(usersDataFilter);
+    const chats = filterChatsValue ? result : messageUserAll;
+    let ids = [];
+    chats.forEach((chat , index) => {
+        const hasNameProperty = chats[index].hasOwnProperty('message');
+        if (hasNameProperty) {
+            const length = chat.message.length;
+            const position = length - 1;
+            let dateMiniChat;
+            if (compareDate(chat.message[position].date) === 'Hoy') {
+                dateMiniChat = chat.message[position].hour
+            } else {
+                dateMiniChat = compareDate(chat.message[position].date)
+            }
+            chatsBar.innerHTML += `
+            <div class="chatMiniBar ${chat.idMessages}" id=${chat.idOtherUser}>
+                <img src="${chat.url_profile_image}" alt="user profile img" class="profilePhotoChatBar">
+                <div class="chat">
+                    <div class="fechaYhora">
+                        <p class="nameMiniChat">${chat.name}</p>
+                        <p class="dayMiniChat">${dateMiniChat}</p>
+                    </div>
+                    <div class="checkYp">
+                        <div class="checkIcons">
+                            <img src="data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACSElEQVR4nO2YPYhTQRSF4z+CiGhhYWEhglhZiBY2goKIFqsIIlhY2YidlprKVkklIcjccyYJMpV2WkhQsNrKQhS0cHdxQRBREBWNRgYXCeNsfrjrTYr5YLrvvZw7mXfnvalUCoVCoVAoTBcATgJ4S3JeRI6vlGuKiBwg+ZVkb2nMr4RriojsALDYF6wH4I3WNSWEsJHkbBLsF4CzGteUXq+3CkC7Pxj/hLuhcc0BcD0NRvJetVpdrXFNEZFTJH8ms/vce79Z45rinNsH4HMyu+9FZJfGNaXdbm8nOZcE++69P6xxTQkhrCf5OLPWL2pccwA0Ml3nptY1BcDVzOw+7HQ6azWuKQCOAegms/vSObdF45rinNsD4GMS7EOr1dqtcU1pNBpbAbxKgv3w3h/RuKbU6/V1AB5l1voljWsOyduZYHe0rikALmda55O4N2jcgcSvKwALcZCcqSgBcDSu7STcawDbNO5Qlgr4+3Bp3u1jd4ldJpndT977vRp37EI0xcQ+T/JFcq+u9/6Exh2ZuJzSv3fcYkIIa0g+yDywVzTu2IjImUwxXRE5P8r1JG9lHlhoXdNiSF7IBHtaq9U2aFzTYpxzh0h+S8LNxe8IjWtaTLPZ3AngXeJ9AbA/vec4rmkxIYRNJJ+NeIQzsvtfiD+U62be+3MA7mfW+rV0gwVwepBrBjLFLDPuxnOn3L40yJ22YmbjCWCfvzCqOzXFAFiMZ7HDNtjl3Ikg/zaAeBp+UOtOBJIz8Qg/jmHvReO4hUKhUChUJsxvDuxjrUm0xUgAAAAASUVORK5CYII=" alt="check icon">
+                        </div>
+                        <p>${chat.message[position].message}</p>
+                    </div>
+                </div>
+            </div>
+            <hr>`;
+            ids.push(chat.idOtherUser)
+        }
+        if (!hasNameProperty && !ids.includes(chat.id)) {
+        chatsBar.innerHTML += `
+        <div class="chatMiniBar" id=${chat.id}>
+            <img src="${chat.url_profile_image}" alt="user profile img" class="profilePhotoChatBar">
+            <div class="chat">
+                <div class="fechaYhora">
+                    <p class="nameMiniChat">${chat.name}</p>
+                </div>
+                <div class="checkYp">
+                    <p>${chat.phrase}</p>
+                </div>
+            </div>
+        </div>`;
+        }
+    });
+};
+
+
+const getMessageUserAll = (usersData, messagesData) => {
+    messageUserAll = [];
+    let otherUser = 0;
+    messagesData.forEach((message) => {
+
+        const objects = {
+            idOtherUser: '',
+            name: '',
+            flagUser: '',
+            last_on_line: '',
+            url_profile_image: '',
+            idMessages: '',
+            message: '',
+            date: '',
+            flag: ''
+        };
+
+
+        switch (idUserOnline) {
+            case message.idUser1:
+                otherUser = message.idUser2;
+                break;
+            case message.idUser2:
+                otherUser = message.idUser1
+                break;
+        }
+
+        objects.idOtherUser = otherUser;
+
+        usersData.forEach((user) => {
+            if (user.id == otherUser) {
+                objects.name = user.name;
+                objects.url_profile_image = user.url_profile_image;
+                objects.flagUser = user.flag;
+                objects.last_on_line = user.last_on_line;
+            };
+        });
+
+        if (idUserOnline === message.idUser1 || idUserOnline === message.idUser2) {
+            objects.message = message.conversations;
+            objects.idMessages = message.id;
+            messageUserAll.push(objects);
+        };
+    });
+    renderMiniChats();
+};
+
+const renderMsgSearchBigChat = (filterChatValue) => {
+    searchResultContainer.innerHTML = '';
+    messageUserAll.forEach(element => {
+        if (element.idMessages == loque && filterChatValue) {
+            const filterBigChat = element.message.filter(obj => obj.message.toLowerCase().includes(filterChatValue.toLowerCase()));
+            filterBigChat.forEach(msg => {
+                searchResultContainer.innerHTML += `
+                <div class="searchResult">
+                    <span>${ compareDate(msg.date) }</span>
+                    <div class="div">
+                        <div class="checkIcons">
+                            <img src="data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACSElEQVR4nO2YPYhTQRSF4z+CiGhhYWEhglhZiBY2goKIFqsIIlhY2YidlprKVkklIcjccyYJMpV2WkhQsNrKQhS0cHdxQRBREBWNRgYXCeNsfrjrTYr5YLrvvZw7mXfnvalUCoVCoVAoTBcATgJ4S3JeRI6vlGuKiBwg+ZVkb2nMr4RriojsALDYF6wH4I3WNSWEsJHkbBLsF4CzGteUXq+3CkC7Pxj/hLuhcc0BcD0NRvJetVpdrXFNEZFTJH8ms/vce79Z45rinNsH4HMyu+9FZJfGNaXdbm8nOZcE++69P6xxTQkhrCf5OLPWL2pccwA0Ml3nptY1BcDVzOw+7HQ6azWuKQCOAegms/vSObdF45rinNsD4GMS7EOr1dqtcU1pNBpbAbxKgv3w3h/RuKbU6/V1AB5l1voljWsOyduZYHe0rikALmda55O4N2jcgcSvKwALcZCcqSgBcDSu7STcawDbNO5Qlgr4+3Bp3u1jd4ldJpndT977vRp37EI0xcQ+T/JFcq+u9/6Exh2ZuJzSv3fcYkIIa0g+yDywVzTu2IjImUwxXRE5P8r1JG9lHlhoXdNiSF7IBHtaq9U2aFzTYpxzh0h+S8LNxe8IjWtaTLPZ3AngXeJ9AbA/vec4rmkxIYRNJJ+NeIQzsvtfiD+U62be+3MA7mfW+rV0gwVwepBrBjLFLDPuxnOn3L40yJ22YmbjCWCfvzCqOzXFAFiMZ7HDNtjl3Ikg/zaAeBp+UOtOBJIz8Qg/jmHvReO4hUKhUChUJsxvDuxjrUm0xUgAAAAASUVORK5CYII=" alt="check icon">
+                        </div>
+                        <p>${msg.message}</p>
+                    </div>
+                </div>`
+            });
+        };
+    });
+    if (newChat) {
+        searchResultContainer.innerHTML = '';
+    }
+};
+
+
+formInputFilterMiniChats.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const filterChatsValue = inputFilterMiniChats.value;
+    renderMiniChats(filterChatsValue);
+});
+
+
+inputFilterBigChat.addEventListener('keyup', () => {
+    const filterChatValue = inputFilterBigChat.value;
+    renderMsgSearchBigChat(filterChatValue);
+});
+
+const actCheckView = () => {
+    let t = false;
+    messageUserAll.forEach( async element => {
+        if (element.idMessages == loque) {
+            element.message.forEach((obj,index) => {
+                if (!obj.flag && obj.sendBy !== idUserOnline) {
+                    const newObj = Object.assign({}, obj, { flag: true });
+                    element.message.splice(index, 1, newObj);
+                    t = true;
+                }
+            })
+            if (t) {
+                patchMessages({ conversations: element.message });
+                const usersData2 = await getApiUsers();
+                const messagesData2 = await getApiMessages();
+                getMessageUserAll(usersData2, messagesData2);
+                renderBigChat();
+            }
+        }
+    })
+}
+
+
+
+
+chatsBar.addEventListener('click', (e) => {
+    if (e.target.classList.contains('chatMiniBar')) {
+        let check = true;
+        mainChat.innerHTML = '';
+        messageUserAll.forEach((element) => {
+            if (element.idOtherUser == e.target.id) {
+                loque = element.idMessages;
+                idOther = element.idOtherUser;
+                renderBigChat();
+                actCheckView();
+                check = false;
+                newChat = false;
+            };
+        });
+        if (check) {
+            idNewUser = e.target.id;
+            newChat = true;
+            renderBigChat();
+        }
+        if (window.innerWidth < 600) {
+            rightSide.classList.remove('ocultar');
+            leftSide.classList.add('hidden');
+        }
+    };
+});
+
+
+arrowHeaderMain.addEventListener('click', () => {
+    rightSide.classList.add('ocultar');
+    leftSide.classList.remove('hidden');
+})
+
+export const idOtherUser = (idOtherUSer) => {
+    return idOtherUSer
+};
+
+
+editUserName.addEventListener('click', () => {
+    nameUser.toggleAttribute('ContentEditable');
+    nameUser.focus();
+})
+
+
+nameUser.addEventListener('keyup', async (e) => {
+    if (e.key === 'Enter') {
+        nameUser.innerText = nameUser.textContent.trim();
+        nameUser.removeAttribute('ContentEditable');
+        await changePropertyUSer(idUserOnline, { name: nameUser.textContent });
+    }
+});

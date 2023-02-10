@@ -1,0 +1,146 @@
+@import "formsigin";
+@import "formsignup";
+@import "homepage";
+
+
+* {
+    padding: 0px;
+    margin: 0px;
+    box-sizing: border-box;
+    font-family: "Lato", sans-serif;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+}
+
+
+.fixedBarSearch{
+    position: fixed;
+    width: 410px;
+    height: 100%;
+    right: 0px;
+    background-color: #F3F3F3;
+    z-index: 1000;
+
+    header{
+        height: 50px;
+        background-color: #F1EEF1;
+        padding: 0px 30px;
+        gap: 35px;
+        display: flex;
+        align-items: center;
+    }
+
+    i{
+        cursor: pointer;
+    }
+
+    h4{
+        color: #000000;
+        font-weight: 700;
+        font-size: 17px;
+    }
+
+    .leftSide_search {
+        height: 60px;
+        background-color: #f6f6f6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        div {
+            display: flex;
+            background-color: #ffffff;
+            align-self: center;
+            width: 355px;
+            height: 35px;
+            border-radius: 40px;
+            padding: 0px 35px 0px 35px;
+            align-items: center;
+            gap: 25px;
+
+            button {
+                background-color: #ffffff;
+                border: none;
+                cursor: pointer;
+                width: 10px;
+                height: 10px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                img {
+                    object-fit: contain;
+                }
+            }
+
+            input {
+                border: none;
+                width: 260px;
+                font-size: 16px;
+                outline: none;
+            }
+        }
+    }
+
+    
+
+    .searchResult{
+        min-height: 72px;
+        background-color: #ffffff;
+        padding: 15px;
+        gap: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #E9EDEF;
+
+        span{
+            font-size: 12px;
+        }
+
+        .div{
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+        }
+
+        .checkIcons{
+            height: 15px;
+            display: flex;
+            img {
+                height: 15px;
+                object-fit: contain;
+            }
+        }
+
+        p{
+            font-size: 16px;
+            color: #000000;
+        }
+    }
+
+    .searchResult:hover{
+        background-color: #F5F6F6;
+    }
+
+    .searchResultContainer{
+        overflow: scroll;
+        height: 82.2%;
+    }
+
+    .searchResultContainer::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+
+.hidden {
+    display: none !important;
+    visibility: hidden;
+};
+
+.ocultar{
+    display: flex;
+    visibility: visible;
+}
